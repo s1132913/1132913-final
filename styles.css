@@ -1,0 +1,184 @@
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #2c3e50, #34495e);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    color: #ecf0f1;
+}
+
+.game-container {
+    text-align: center;
+    background: rgba(0,0,0,0.85);
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    max-width: 600px;
+    width: 95%;
+}
+
+h1 {
+    font-size: 2.2em;
+    background: linear-gradient(45deg, #f39c12, #e67e22);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0 0 15px 0;
+}
+h1 small { font-size: 0.5em; color: #bbb; -webkit-text-fill-color: #bbb; }
+
+.status {
+    font-size: 1.1em;
+    margin: 15px 0;
+    padding: 10px;
+    background: rgba(52, 73, 94, 0.8);
+    border-radius: 8px;
+    border-left: 5px solid #3498db;
+    transition: all 0.3s ease;
+}
+
+/* --- 棋盤視覺 --- */
+#board {
+    display: grid;
+    grid-template-columns: repeat(9, 40px);
+    grid-template-rows: repeat(9, 40px);
+    margin: 20px auto;
+    padding: 20px;
+    background: #e6b87d; 
+    border: 3px solid #5d4037;
+    border-radius: 4px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    width: fit-content;
+    position: relative;
+    user-select: none;
+}
+
+#board.game-over { opacity: 0.9; cursor: not-allowed; }
+
+.cell {
+    width: 40px;
+    height: 40px;
+    position: relative;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 格線 */
+.cell::before {
+    content: ''; position: absolute;
+    top: 50%; left: 0; width: 100%; height: 1px;
+    background: #000; z-index: 0;
+}
+.cell::after {
+    content: ''; position: absolute;
+    left: 50%; top: 0; height: 100%; width: 1px;
+    background: #000; z-index: 0;
+}
+/* 邊角修正 */
+.cell[data-row="0"]::after { top: 50%; height: 50%; }
+.cell[data-row="8"]::after { height: 50%; }
+.cell[data-col="0"]::before { left: 50%; width: 50%; }
+.cell[data-col="8"]::before { width: 50%; }
+
+/* 星位 */
+.dot {
+    position: absolute; width: 8px; height: 8px;
+    background: #000; border-radius: 50%;
+    z-index: 1; pointer-events: none;
+}
+
+/* --- 棋子 --- */
+.stone {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    position: absolute;
+    z-index: 2;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+    transition: transform 0.2s, opacity 0.2s;
+}
+.cell.black .stone { background: radial-gradient(circle at 35% 35%, #444, #000); }
+.cell.white .stone { background: radial-gradient(circle at 35% 35%, #fff, #ddd); }
+
+/* 叫吃動畫 */
+@keyframes pulse-red {
+    0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+    70% { box-shadow: 0 0 0 6px rgba(231, 76, 60, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+}
+.stone.atari {
+    animation: pulse-red 1.5s infinite;
+    border: 2px solid #e74c3c;
+}
+
+/* 最後一手標記 */
+.last-move .stone::after {
+    content: ''; position: absolute;
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 8px; height: 8px;
+    border: 2px solid #e74c3c; border-radius: 50%;
+}
+
+/* 終局地盤標記 */
+.territory-mark {
+    position: absolute;
+    width: 12px; height: 12px;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1; border-radius: 2px;
+}
+.territory-black { background-color: #000; opacity: 0.6; box-shadow: 0 0 2px #fff; }
+.territory-white { background-color: #fff; opacity: 0.6; box-shadow: 0 0 2px #000; }
+
+/* 提示效果 (Hover) */
+.cell.ghost-black::after, .cell.ghost-white::after {
+    content: ''; position: absolute;
+    width: 34px; height: 34px; border-radius: 50%;
+    z-index: 3; pointer-events: none;
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    box-shadow: 0 0 5px rgba(0,0,0,0.3);
+}
+.cell.ghost-black::after { background: radial-gradient(circle at 35% 35%, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)); }
+.cell.ghost-white::after { background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.6), rgba(221, 221, 221, 0.6)); }
+
+.capture-badge {
+    position: absolute; top: -8px; right: -8px;
+    background-color: #e74c3c; color: white;
+    font-size: 14px; font-weight: bold;
+    width: 20px; height: 20px;
+    display: flex; justify-content: center; align-items: center;
+    border-radius: 50%; z-index: 10;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.6);
+    border: 2px solid #fff;
+}
+
+.forbidden-mark {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 30px; height: 30px; z-index: 4; pointer-events: none;
+}
+.forbidden-mark::before, .forbidden-mark::after {
+    content: ''; position: absolute;
+    top: 50%; left: 50%; width: 100%; height: 4px;
+    background-color: rgba(231, 76, 60, 0.9); border-radius: 2px;
+}
+.forbidden-mark::before { transform: translate(-50%, -50%) rotate(45deg); }
+.forbidden-mark::after { transform: translate(-50%, -50%) rotate(-45deg); }
+.cell.forbidden { cursor: not-allowed; }
+
+/* 按鈕與分數 */
+button {
+    background: #34495e; border: 1px solid #7f8c8d;
+    color: white; padding: 10px 20px; margin: 5px;
+    border-radius: 4px; cursor: pointer; font-weight: bold;
+}
+button:hover:not(:disabled) { background: #2c3e50; border-color: #3498db; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+.pass-btn { background: #e67e22; border-color: #d35400; }
+.score { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; }
+.score div { padding: 5px 15px; border-radius: 5px; }
+.black-score { border: 1px solid #555; background: #222; }
+.white-score { border: 1px solid #ddd; background: #eee; color: #333; }
+.info-text { font-size: 0.8em; color: #aaa; }
